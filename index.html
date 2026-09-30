@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 
-  <title>Flipbook iOS Page Curl</title>
+  <title>Flipbook</title>
 
   <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
 
@@ -15,7 +15,8 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    html, body {
+    html,
+    body {
       margin: 0;
       width: 100%;
       min-height: 100%;
@@ -26,9 +27,9 @@
     body {
       min-height: 100vh;
       min-height: 100dvh;
-      overflow-x: hidden;
       background: #dedede;
       font-family: Arial, Helvetica, sans-serif;
+      overflow-x: hidden;
     }
 
     .stage {
@@ -42,43 +43,42 @@
 
       padding:
         max(10px, env(safe-area-inset-top))
-        8px
+        6px
         max(10px, env(safe-area-inset-bottom));
 
       overflow: hidden;
     }
 
     /*
-      Giữ vùng sách ổn định để iOS không giật layout.
-      KHÔNG đặt touch-action:none ở #book:
-      StPageFlip cần touch event để tạo page curl tương tác.
+      Khung cố định giúp tránh Safari thay đổi layout
+      khi thanh địa chỉ iOS co / giãn.
     */
     .book-shell {
-      width: min(96vw, 560px);
-      height: min(76dvh, 760px);
+      width: 100%;
+      max-width: 1080px;
+
+      height: min(76dvh, 720px);
 
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
 
       overflow: hidden;
 
       contain: layout paint;
       transform: translateZ(0);
-      backface-visibility: hidden;
+      -webkit-transform: translateZ(0);
     }
 
     #book {
       margin: 0 auto;
 
       transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
 
-      /*
-        Cho engine nhận gesture ngang,
-        nhưng hạn chế trình duyệt giành gesture.
-      */
       touch-action: pan-y;
     }
 
@@ -94,14 +94,17 @@
       width: 100%;
       height: 100%;
       position: relative;
+
       overflow: hidden;
       background: #f7f3ea;
     }
 
     .page img {
+      display: block;
+
       width: 100%;
       height: 100%;
-      display: block;
+
       object-fit: cover;
 
       pointer-events: none;
@@ -111,83 +114,112 @@
     }
 
     /*
-      Một lớp ánh sáng nhẹ để phần uốn giấy nhìn rõ hơn.
-      Shadow chính vẫn do StPageFlip tạo.
+      Ánh sáng rất nhẹ ở mép trang.
+      Shadow chính vẫn do StPageFlip render.
     */
     .page-content::after {
       content: "";
       position: absolute;
       inset: 0;
+
       pointer-events: none;
 
       background: linear-gradient(
         90deg,
-        rgba(255,255,255,.06),
+        rgba(255,255,255,.05),
         transparent 18%,
         transparent 82%,
-        rgba(0,0,0,.04)
+        rgba(0,0,0,.035)
       );
 
       mix-blend-mode: multiply;
     }
 
     .toolbar {
+      flex: 0 0 auto;
+
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+
       gap: 8px;
 
       margin-top: 10px;
-      flex-wrap: wrap;
     }
 
     button {
+      appearance: none;
+      -webkit-appearance: none;
+
       border: 1px solid rgba(0,0,0,.12);
       background: rgba(255,255,255,.94);
 
       border-radius: 9px;
       padding: 10px 15px;
 
-      font-size: 15px;
+      font-size: 14px;
       cursor: pointer;
 
       touch-action: manipulation;
     }
 
+    button:active {
+      opacity: .72;
+    }
+
     #pageInfo {
-      min-width: 108px;
+      min-width: 105px;
       text-align: center;
+
       color: #555;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .hint {
-      margin: 9px 0 0;
-      max-width: 580px;
+      flex: 0 0 auto;
+
+      margin: 8px 0 0;
       padding: 0 12px;
 
-      text-align: center;
-      line-height: 1.45;
+      max-width: 620px;
 
-      font-size: 13px;
       color: #555;
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: center;
     }
 
+    /*
+      Mobile:
+      vẫn giữ 2 trang.
+      Vì vậy mỗi trang sẽ nhỏ hơn nhưng forward/backward
+      dùng cùng cơ chế spread của StPageFlip.
+    */
     @media (max-width: 700px) {
-      /*
-        Trên iOS tránh drop-shadow/filter cho cả book trong lúc transform,
-        vì Safari đôi khi repaint toàn viewport gây cảm giác rung.
-      */
+      .stage {
+        justify-content: flex-start;
+        padding-top: max(8px, env(safe-area-inset-top));
+      }
+
+      .book-shell {
+        height: min(68dvh, 610px);
+      }
+
       #book {
         filter: none;
       }
 
-      .stage {
-        justify-content: flex-start;
+      .toolbar {
+        margin-top: 8px;
       }
 
-      .book-shell {
-        margin-top: 6px;
+      button {
+        padding: 9px 12px;
+        font-size: 13px;
+      }
+
+      .hint {
+        font-size: 11px;
       }
     }
 
@@ -239,111 +271,109 @@
     </div>
 
     <p class="hint">
-      Trên iPhone/iPad: hãy <strong>chạm gần mép hoặc góc trang rồi kéo</strong>,
-      không chỉ vuốt nhanh. Khi kéo chậm, trang sẽ cuộn theo ngón tay.
+      Trên iPhone/iPad: chạm gần góc hoặc mép trang rồi kéo chậm.
+      Bản này luôn giữ chế độ 2 trang để hiệu ứng lật tới và lật lui đồng nhất hơn.
     </p>
 
   </main>
 
   <script>
-    const book = document.getElementById("book");
+    const bookElement = document.getElementById("book");
     const pages = document.querySelectorAll(".page");
     const pageInfo = document.getElementById("pageInfo");
 
-    const pageFlip = new St.PageFlip(book, {
-      width: 450,
-      height: 600,
+    const isMobile = window.matchMedia("(max-width: 700px)").matches;
+
+    /*
+      Kích thước page nhỏ hơn trên mobile để 2 trang
+      có thể nằm vừa trong chiều rộng màn hình.
+    */
+    const pageWidth  = isMobile ? 180 : 450;
+    const pageHeight = isMobile ? 240 : 600;
+
+    const pageFlip = new St.PageFlip(bookElement, {
+      width: pageWidth,
+      height: pageHeight,
 
       size: "stretch",
-      minWidth: 260,
-      maxWidth: 540,
-      minHeight: 347,
-      maxHeight: 720,
 
       /*
-        Giữ autoSize để StPageFlip tính đúng vùng touch,
-        nhưng shell bên ngoài cố định nên không làm viewport nhảy.
+        Desktop: mỗi page tối đa 450 x 600.
+        Mobile: cho phép thu nhỏ đáng kể để giữ spread 2 trang.
       */
-      autoSize: true,
+      minWidth: 120,
+      maxWidth: isMobile ? 220 : 450,
+
+      minHeight: 160,
+      maxHeight: isMobile ? 294 : 600,
+
+      /*
+        QUAN TRỌNG:
+        false = không chuyển sang chế độ 1-page portrait.
+        Đây là thay đổi chính của bản này.
+      */
+      usePortrait: false,
 
       showCover: false,
-      usePortrait: true,
 
       /*
-        SOFT PAGE CURL
+        Giữ kích thước do wrapper kiểm soát,
+        tránh resize liên tục trên Safari.
       */
+      autoSize: false,
+
       drawShadow: true,
-      maxShadowOpacity: 0.85,
+      maxShadowOpacity: 0.82,
 
       flippingTime: 1000,
 
       /*
-        QUAN TRỌNG:
-        Bật input native của PageFlip cả desktop lẫn touch.
-        Không tự bắt touchstart/touchmove nữa.
+        Cho StPageFlip xử lý touch trực tiếp.
+        Không viết swipe custom.
       */
       useMouseEvents: true,
-
-      /*
-        false = PageFlip được phép chặn scroll khi đang thao tác trên sách.
-        Nhờ vậy gesture ngang không bị Safari lấy mất giữa chừng.
-      */
       mobileScrollSupport: false,
 
-      swipeDistance: 24,
+      swipeDistance: 18,
 
-      /*
-        Khi rê/chạm vùng góc, engine sẽ hiển thị page corner.
-      */
       showPageCorners: true,
-
-      /*
-        Click/tap vẫn có thể lật.
-        Kéo giữ sẽ tạo curl liên tục.
-      */
       disableFlipByClick: false,
-
       clickEventForward: true
     });
 
     pageFlip.loadFromHTML(pages);
 
-    pageFlip.on("flip", (e) => {
+    pageFlip.on("flip", (event) => {
       pageInfo.textContent =
-        `Trang ${e.data + 1} / ${pages.length}`;
+        `Trang ${event.data + 1} / ${pages.length}`;
     });
 
     /*
-      Nút vẫn dùng animation tự động.
-      Muốn thấy CURL rõ nhất trên iOS thì kéo trực tiếp trang.
+      Cả hai nút đều dùng cùng corner.
     */
-    document.getElementById("nextBtn").addEventListener("click", () => {
-      pageFlip.flipNext("bottom");
-    });
+    document
+      .getElementById("nextBtn")
+      .addEventListener("click", () => {
+        pageFlip.flipNext("bottom");
+      });
 
-    document.getElementById("prevBtn").addEventListener("click", () => {
-      pageFlip.flipPrev("bottom");
+    document
+      .getElementById("prevBtn")
+      .addEventListener("click", () => {
+        pageFlip.flipPrev("bottom");
+      });
+
+    /*
+      Chặn pinch zoom của Safari nhưng không chặn drag 1 ngón.
+    */
+    document.addEventListener("gesturestart", (event) => {
+      event.preventDefault();
     });
 
     /*
-      Chỉ ngăn bounce ngoài vùng sách.
-      TUYỆT ĐỐI không preventDefault touchmove trên #book,
-      vì engine cần chuỗi touch để tính độ cong.
+      Không preventDefault touchmove trên #book.
+      StPageFlip cần touchmove để tính curl.
     */
-    document.addEventListener("touchmove", (e) => {
-      if (!book.contains(e.target)) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-
-    /*
-      Safari đôi khi gửi gesturestart cho pinch zoom.
-      Chặn pinch nhưng không chặn drag một ngón.
-    */
-    document.addEventListener("gesturestart", (e) => {
-      e.preventDefault();
-    });
-
   </script>
 </body>
 </html>
