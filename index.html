@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Soft Page Flipbook Demo</title>
+
+  <!-- StPageFlip -->
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 50% 35%, #f1f1f1 0%, #d9d9d9 65%, #cfcfcf 100%);
+      font-family: Arial, Helvetica, sans-serif;
+      color: #222;
+      overflow-x: hidden;
+    }
+
+    .stage {
+      width: min(1180px, 96vw);
+      padding: 24px 10px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #book {
+      margin: 0 auto;
+      filter: drop-shadow(0 20px 25px rgba(0,0,0,.18));
+    }
+
+    .page {
+      background: #f7f3ea;
+      overflow: hidden;
+    }
+
+    .page-content {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      background: #f7f3ea;
+    }
+
+    .page img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
+    }
+
+    /* subtle paper light */
+    .page-content::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        90deg,
+        rgba(255,255,255,.08),
+        transparent 22%,
+        transparent 78%,
+        rgba(0,0,0,.035)
+      );
+      mix-blend-mode: multiply;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    button {
+      border: 1px solid rgba(0,0,0,.12);
+      background: rgba(255,255,255,.9);
+      border-radius: 9px;
+      padding: 10px 16px;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0,0,0,.08);
+    }
+
+    button:hover {
+      background: white;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    #pageInfo {
+      min-width: 110px;
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .hint {
+      margin: 14px 0 0;
+      text-align: center;
+      color: #555;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .hint strong {
+      color: #222;
+    }
+
+    @media (max-width: 700px) {
+      .stage {
+        padding-top: 12px;
+      }
+
+      .hint {
+        padding: 0 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="stage">
+    <div id="book">
+      <div class="page" data-density="soft">
+        <div class="page-content">
+          <img src="page1.jpg" alt="Trang 1">
+        </div>
+      </div>
+
+      <div class="page" data-density="soft">
+        <div class="page-content">
+          <img src="page2.jpg" alt="Trang 2">
+        </div>
+      </div>
+
+      <div class="page" data-density="soft">
+        <div class="page-content">
+          <img src="page3.jpg" alt="Trang 3">
+        </div>
+      </div>
+
+      <div class="page" data-density="soft">
+        <div class="page-content">
+          <img src="page4.jpg" alt="Trang 4">
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button id="prevBtn">← Trang trước</button>
+      <span id="pageInfo">Trang 1 / 4</span>
+      <button id="nextBtn">Trang sau →</button>
+    </div>
+
+    <p class="hint">
+      <strong>Để thấy độ cong rõ nhất:</strong>
+      đưa chuột vào góc phải của trang, giữ chuột và kéo chậm sang trái.
+      Bấm nút chỉ tạo thao tác lật tự động nên độ cong sẽ khó quan sát hơn.
+    </p>
+  </main>
+
+  <script>
+    const bookEl = document.getElementById("book");
+
+    const pageFlip = new St.PageFlip(bookEl, {
+      width: 450,
+      height: 600,
+
+      size: "stretch",
+      minWidth: 280,
+      maxWidth: 540,
+      minHeight: 373,
+      maxHeight: 720,
+
+      showCover: false,
+      usePortrait: true,
+      autoSize: true,
+
+      drawShadow: true,
+      maxShadowOpacity: 0.75,
+
+      flippingTime: 1100,
+
+      mobileScrollSupport: false,
+      clickEventForward: true,
+      useMouseEvents: true,
+
+      swipeDistance: 18,
+      showPageCorners: true,
+      disableFlipByClick: false
+    });
+
+    const pages = document.querySelectorAll(".page");
+    pageFlip.loadFromHTML(pages);
+
+    const pageInfo = document.getElementById("pageInfo");
+
+    function updatePageInfo(index) {
+      pageInfo.textContent = `Trang ${index + 1} / ${pages.length}`;
+    }
+
+    pageFlip.on("flip", (e) => {
+      updatePageInfo(e.data);
+    });
+
+    document.getElementById("prevBtn").addEventListener("click", () => {
+      pageFlip.flipPrev("top");
+    });
+
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      pageFlip.flipNext("top");
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") pageFlip.flipPrev();
+      if (e.key === "ArrowRight") pageFlip.flipNext();
+    });
+
+    updatePageInfo(0);
+  </script>
+</body>
+</html>
