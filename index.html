@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport"
-        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
-  <title>Flipbook</title>
+  <title>PDF Flipbook</title>
 
+  <!-- StPageFlip -->
   <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
 
   <style>
@@ -15,13 +16,11 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    html,
-    body {
+    html, body {
       margin: 0;
       width: 100%;
       min-height: 100%;
       overscroll-behavior: none;
-      -webkit-text-size-adjust: 100%;
     }
 
     body {
@@ -43,114 +42,69 @@
 
       padding:
         max(10px, env(safe-area-inset-top))
-        6px
+        8px
         max(10px, env(safe-area-inset-bottom));
-
-      overflow: hidden;
     }
 
-    /*
-      Khung cố định giúp tránh Safari thay đổi layout
-      khi thanh địa chỉ iOS co / giãn.
-    */
+    #loading {
+      padding: 14px 18px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 5px 20px rgba(0,0,0,.12);
+      color: #444;
+      margin-bottom: 12px;
+    }
+
     .book-shell {
       width: 100%;
-      max-width: 1080px;
+      max-width: 1100px;
+      height: min(76dvh, 760px);
 
-      height: min(76dvh, 720px);
-
-      display: flex;
-      justify-content: center;
+      display: none;
       align-items: center;
+      justify-content: center;
 
       overflow: hidden;
-
       contain: layout paint;
-      transform: translateZ(0);
-      -webkit-transform: translateZ(0);
     }
 
     #book {
       margin: 0 auto;
-
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
-
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-
       touch-action: pan-y;
     }
 
     .page {
-      background: #f7f3ea;
+      background: white;
       overflow: hidden;
-
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
     }
 
-    .page-content {
+    .page-inner {
       width: 100%;
       height: 100%;
-      position: relative;
-
+      background: white;
       overflow: hidden;
-      background: #f7f3ea;
     }
 
-    .page img {
-      display: block;
-
+    .page canvas {
       width: 100%;
       height: 100%;
-
-      object-fit: cover;
-
-      pointer-events: none;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-user-drag: none;
-    }
-
-    /*
-      Ánh sáng rất nhẹ ở mép trang.
-      Shadow chính vẫn do StPageFlip render.
-    */
-    .page-content::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-
-      pointer-events: none;
-
-      background: linear-gradient(
-        90deg,
-        rgba(255,255,255,.05),
-        transparent 18%,
-        transparent 82%,
-        rgba(0,0,0,.035)
-      );
-
-      mix-blend-mode: multiply;
+      display: block;
     }
 
     .toolbar {
-      flex: 0 0 auto;
-
-      display: flex;
-      justify-content: center;
+      display: none;
       align-items: center;
-
+      justify-content: center;
       gap: 8px;
 
       margin-top: 10px;
     }
 
     button {
-      appearance: none;
-      -webkit-appearance: none;
-
       border: 1px solid rgba(0,0,0,.12);
       background: rgba(255,255,255,.94);
 
@@ -159,221 +113,293 @@
 
       font-size: 14px;
       cursor: pointer;
-
       touch-action: manipulation;
     }
 
-    button:active {
-      opacity: .72;
-    }
-
     #pageInfo {
-      min-width: 105px;
+      min-width: 110px;
       text-align: center;
-
       color: #555;
       font-size: 13px;
     }
 
     .hint {
-      flex: 0 0 auto;
-
+      display: none;
+      max-width: 620px;
       margin: 8px 0 0;
       padding: 0 12px;
 
-      max-width: 620px;
-
+      text-align: center;
       color: #555;
       font-size: 12px;
-      line-height: 1.4;
-      text-align: center;
+      line-height: 1.45;
     }
 
-    /*
-      Mobile:
-      vẫn giữ 2 trang.
-      Vì vậy mỗi trang sẽ nhỏ hơn nhưng forward/backward
-      dùng cùng cơ chế spread của StPageFlip.
-    */
     @media (max-width: 700px) {
       .stage {
         justify-content: flex-start;
-        padding-top: max(8px, env(safe-area-inset-top));
       }
 
       .book-shell {
-        height: min(68dvh, 610px);
-      }
-
-      #book {
-        filter: none;
-      }
-
-      .toolbar {
-        margin-top: 8px;
-      }
-
-      button {
-        padding: 9px 12px;
-        font-size: 13px;
-      }
-
-      .hint {
-        font-size: 11px;
-      }
-    }
-
-    @media (min-width: 701px) {
-      #book {
-        filter: drop-shadow(0 16px 24px rgba(0,0,0,.18));
+        height: min(70dvh, 620px);
       }
     }
   </style>
 </head>
 
 <body>
+
   <main class="stage">
 
-    <div class="book-shell">
-      <div id="book">
-
-        <div class="page" data-density="soft">
-          <div class="page-content">
-            <img src="page1.jpg" alt="Trang 1">
-          </div>
-        </div>
-
-        <div class="page" data-density="soft">
-          <div class="page-content">
-            <img src="page2.jpg" alt="Trang 2">
-          </div>
-        </div>
-
-        <div class="page" data-density="soft">
-          <div class="page-content">
-            <img src="page3.jpg" alt="Trang 3">
-          </div>
-        </div>
-
-        <div class="page" data-density="soft">
-          <div class="page-content">
-            <img src="page4.jpg" alt="Trang 4">
-          </div>
-        </div>
-
-      </div>
+    <div id="loading">
+      Đang tải PDF...
     </div>
 
-    <div class="toolbar">
+    <div class="book-shell" id="bookShell">
+      <div id="book"></div>
+    </div>
+
+    <div class="toolbar" id="toolbar">
       <button id="prevBtn">← Trang trước</button>
-      <span id="pageInfo">Trang 1 / 4</span>
+      <span id="pageInfo">Trang 1</span>
       <button id="nextBtn">Trang sau →</button>
     </div>
 
-    <p class="hint">
-      Trên iPhone/iPad: chạm gần góc hoặc mép trang rồi kéo chậm.
-      Bản này luôn giữ chế độ 2 trang để hiệu ứng lật tới và lật lui đồng nhất hơn.
+    <p class="hint" id="hint">
+      Flipbook này đọc trực tiếp <strong>book.pdf</strong>.
+      Không cần tách PDF thành JPG.
     </p>
 
   </main>
 
-  <script>
+  <script type="module">
+
+    import * as pdfjsLib
+      from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs";
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs";
+
+
+    const PDF_URL = "book.pdf";
+
+    const loadingEl = document.getElementById("loading");
+    const bookShell = document.getElementById("bookShell");
     const bookElement = document.getElementById("book");
-    const pages = document.querySelectorAll(".page");
+
+    const toolbar = document.getElementById("toolbar");
+    const hint = document.getElementById("hint");
     const pageInfo = document.getElementById("pageInfo");
 
-    const isMobile = window.matchMedia("(max-width: 700px)").matches;
+    const isMobile =
+      window.matchMedia("(max-width: 700px)").matches;
 
-    /*
-      Kích thước page nhỏ hơn trên mobile để 2 trang
-      có thể nằm vừa trong chiều rộng màn hình.
-    */
-    const pageWidth  = isMobile ? 180 : 450;
-    const pageHeight = isMobile ? 240 : 600;
 
-    const pageFlip = new St.PageFlip(bookElement, {
-      width: pageWidth,
-      height: pageHeight,
+    async function loadFlipbook() {
 
-      size: "stretch",
+      try {
 
-      /*
-        Desktop: mỗi page tối đa 450 x 600.
-        Mobile: cho phép thu nhỏ đáng kể để giữ spread 2 trang.
-      */
-      minWidth: 120,
-      maxWidth: isMobile ? 220 : 450,
+        /*
+          1. Đọc PDF
+        */
+        const loadingTask = pdfjsLib.getDocument(PDF_URL);
+        const pdf = await loadingTask.promise;
 
-      minHeight: 160,
-      maxHeight: isMobile ? 294 : 600,
+        // loadingEl.textContent =
+        //   `Đang render ${pdf.numPages} trang...`;
 
-      /*
-        QUAN TRỌNG:
-        false = không chuyển sang chế độ 1-page portrait.
-        Đây là thay đổi chính của bản này.
-      */
-      usePortrait: false,
+        /*
+          2. Render từng trang PDF thành canvas
+        */
+        for (let pageNumber = 1;
+             pageNumber <= pdf.numPages;
+             pageNumber++) {
 
-      showCover: false,
+          const pdfPage =
+            await pdf.getPage(pageNumber);
 
-      /*
-        Giữ kích thước do wrapper kiểm soát,
-        tránh resize liên tục trên Safari.
-      */
-      autoSize: false,
+          /*
+            Scale 1.5 đủ nét cho demo.
+            PDF lớn có thể giảm xuống 1.2 để tiết kiệm RAM.
+          */
+          const viewport =
+            pdfPage.getViewport({
+              scale: isMobile ? 1.25 : 1.5
+            });
 
-      drawShadow: true,
-      maxShadowOpacity: 0.82,
 
-      flippingTime: 1000,
+          const pageDiv =
+            document.createElement("div");
 
-      /*
-        Cho StPageFlip xử lý touch trực tiếp.
-        Không viết swipe custom.
-      */
-      useMouseEvents: true,
-      mobileScrollSupport: false,
+          pageDiv.className = "page";
 
-      swipeDistance: 18,
+          /*
+            soft = dùng hiệu ứng uốn trang
+          */
+          pageDiv.dataset.density = "soft";
 
-      showPageCorners: true,
-      disableFlipByClick: false,
-      clickEventForward: true
-    });
 
-    pageFlip.loadFromHTML(pages);
+          const inner =
+            document.createElement("div");
 
-    pageFlip.on("flip", (event) => {
-      pageInfo.textContent =
-        `Trang ${event.data + 1} / ${pages.length}`;
-    });
+          inner.className = "page-inner";
 
-    /*
-      Cả hai nút đều dùng cùng corner.
-    */
-    document
-      .getElementById("nextBtn")
-      .addEventListener("click", () => {
-        pageFlip.flipNext("bottom");
-      });
 
-    document
-      .getElementById("prevBtn")
-      .addEventListener("click", () => {
-        pageFlip.flipPrev("bottom");
-      });
+          const canvas =
+            document.createElement("canvas");
 
-    /*
-      Chặn pinch zoom của Safari nhưng không chặn drag 1 ngón.
-    */
-    document.addEventListener("gesturestart", (event) => {
-      event.preventDefault();
-    });
+          const context =
+            canvas.getContext("2d", {
+              alpha: false
+            });
 
-    /*
-      Không preventDefault touchmove trên #book.
-      StPageFlip cần touchmove để tính curl.
-    */
+
+          /*
+            devicePixelRatio tối đa 2,
+            tránh canvas quá lớn trên iPhone Retina.
+          */
+          const outputScale =
+            Math.min(window.devicePixelRatio || 1, 2);
+
+
+          canvas.width =
+            Math.floor(viewport.width * outputScale);
+
+          canvas.height =
+            Math.floor(viewport.height * outputScale);
+
+
+          canvas.style.width =
+            viewport.width + "px";
+
+          canvas.style.height =
+            viewport.height + "px";
+
+
+          const transform =
+            outputScale !== 1
+              ? [outputScale, 0, 0, outputScale, 0, 0]
+              : null;
+
+
+          await pdfPage.render({
+            canvasContext: context,
+            viewport: viewport,
+            transform: transform
+          }).promise;
+
+
+          inner.appendChild(canvas);
+          pageDiv.appendChild(inner);
+          bookElement.appendChild(pageDiv);
+        }
+
+
+        /*
+          3. Sau khi toàn bộ PDF render xong
+             mới khởi tạo StPageFlip.
+        */
+        const pages =
+          document.querySelectorAll(".page");
+
+
+        const pageFlip =
+          new St.PageFlip(bookElement, {
+
+            width: 450,
+            height: 636,
+
+            size: "stretch",
+
+            minWidth: 120,
+            maxWidth: 450,
+
+            minHeight: 170,
+            maxHeight: 636,
+
+            /*
+              Giữ 2 trang cả desktop/mobile
+              như bản bạn đang test trước đó.
+            */
+            usePortrait: false,
+
+            showCover: false,
+            autoSize: false,
+
+            drawShadow: true,
+            maxShadowOpacity: 0.82,
+
+            flippingTime: 1000,
+
+            useMouseEvents: true,
+            mobileScrollSupport: false,
+
+            swipeDistance: 18,
+
+            showPageCorners: true,
+            disableFlipByClick: false,
+            clickEventForward: true
+          });
+
+
+        pageFlip.loadFromHTML(pages);
+
+
+        /*
+          4. UI
+        */
+        pageFlip.on("flip", (event) => {
+
+          pageInfo.textContent =
+            `Trang ${event.data + 1} / ${pdf.numPages}`;
+
+        });
+
+
+        document
+          .getElementById("nextBtn")
+          .addEventListener("click", () => {
+
+            pageFlip.flipNext("bottom");
+
+          });
+
+
+        document
+          .getElementById("prevBtn")
+          .addEventListener("click", () => {
+
+            pageFlip.flipPrev("bottom");
+
+          });
+
+
+        pageInfo.textContent =
+          `Trang 1 / ${pdf.numPages}`;
+
+        loadingEl.style.display = "none";
+
+        bookShell.style.display = "flex";
+        toolbar.style.display = "flex";
+        hint.style.display = "block";
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        loadingEl.innerHTML =
+          "Không tải được <strong>book.pdf</strong>.<br>" +
+          "Hãy kiểm tra file PDF nằm cùng thư mục với index.html.";
+
+      }
+
+    }
+
+
+    loadFlipbook();
+
   </script>
+
 </body>
 </html>
