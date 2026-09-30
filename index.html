@@ -2,76 +2,169 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Flipbook Demo - Mobile Fixed</title>
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+
+  <title>Flipbook Mobile Symmetric</title>
 
   <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-    html, body {
-      margin: 0;
-      min-height: 100%;
+    html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+
+      overscroll-behavior: none;
+      -webkit-text-size-adjust: 100%;
     }
 
     body {
-      min-height: 100vh;
+      margin: 0;
+
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+
+      overflow: hidden;
+      overscroll-behavior: none;
+
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+
       background:
         radial-gradient(circle at 50% 35%, #f1f1f1 0%, #d9d9d9 65%, #cfcfcf 100%);
+
       font-family: Arial, Helvetica, sans-serif;
       color: #222;
-      overflow-x: hidden;
+
+      touch-action: none;
     }
 
     .stage {
-      width: min(1180px, 100vw);
-      padding: 20px 8px 14px;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+
+      overflow: hidden;
+
       display: flex;
       flex-direction: column;
+      justify-content: center;
       align-items: center;
+
+      padding:
+        max(8px, env(safe-area-inset-top))
+        8px
+        max(8px, env(safe-area-inset-bottom));
+
+      contain: layout paint size;
+    }
+
+    /*
+      Một wrapper riêng có kích thước ổn định.
+      Tránh PageFlip thay đổi layout làm màn hình giật/rung.
+    */
+    #bookShell {
+      position: relative;
+
+      width: min(92vw, 540px);
+      height: min(74dvh, 720px);
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      overflow: hidden;
+
+      contain: layout paint;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+
+      touch-action: none;
     }
 
     #book {
       margin: 0 auto;
-      filter: drop-shadow(0 20px 25px rgba(0,0,0,.18));
-      touch-action: pan-y;
-      -webkit-tap-highlight-color: transparent;
+
+      transform: translateZ(0);
+      transform-origin: center center;
+
+      backface-visibility: hidden;
+      will-change: transform;
+
+      filter: drop-shadow(0 14px 22px rgba(0,0,0,.18));
+
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /*
+      Chế độ mirror chỉ bật trong lúc lật về trang trước.
+      Book bị mirror, nội dung trang mirror ngược lại để chữ/ảnh không bị lật.
+    */
+    #book.mirror-prev {
+      transform: translateZ(0) scaleX(-1);
+    }
+
+    #book.mirror-prev .page-content {
+      transform: scaleX(-1);
     }
 
     .page {
       background: #f7f3ea;
       overflow: hidden;
+
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+
+      transform: translateZ(0);
     }
 
     .page-content {
+      position: relative;
       width: 100%;
       height: 100%;
-      position: relative;
+
       overflow: hidden;
       background: #f7f3ea;
+
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+
+      transform-origin: center;
     }
 
     .page img {
+      display: block;
       width: 100%;
       height: 100%;
-      display: block;
+
       object-fit: cover;
+
+      pointer-events: none;
       user-select: none;
       -webkit-user-select: none;
       -webkit-user-drag: none;
-      pointer-events: none;
+
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .page-content::after {
       content: "";
       position: absolute;
       inset: 0;
+
       pointer-events: none;
+
       background: linear-gradient(
         90deg,
         rgba(255,255,255,.08),
@@ -79,63 +172,94 @@
         transparent 78%,
         rgba(0,0,0,.04)
       );
+
       mix-blend-mode: multiply;
     }
 
     .toolbar {
+      flex: 0 0 auto;
+
       display: flex;
+      justify-content: center;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 16px;
+
+      width: 100%;
+      margin-top: 10px;
     }
 
     button {
+      appearance: none;
+      -webkit-appearance: none;
+
       border: 1px solid rgba(0,0,0,.12);
-      background: rgba(255,255,255,.92);
+      background: rgba(255,255,255,.94);
+
       border-radius: 9px;
-      padding: 10px 16px;
+      padding: 10px 15px;
+
       font-size: 15px;
+      line-height: 1;
+
       cursor: pointer;
-      box-shadow: 0 3px 10px rgba(0,0,0,.08);
+
+      box-shadow: 0 3px 9px rgba(0,0,0,.08);
+
+      touch-action: manipulation;
     }
 
     button:active {
-      transform: translateY(1px);
+      opacity: .75;
     }
 
     #pageInfo {
-      min-width: 110px;
+      min-width: 104px;
       text-align: center;
       font-size: 14px;
       color: #555;
     }
 
     .hint {
-      margin: 12px 0 0;
-      padding: 0 12px;
+      flex: 0 0 auto;
+
+      margin: 8px 0 0;
+      padding: 0 10px;
+
+      max-width: 560px;
+
       text-align: center;
       color: #555;
-      font-size: 14px;
-      line-height: 1.5;
+
+      font-size: 13px;
+      line-height: 1.4;
     }
 
-    @media (max-width: 700px) {
+    @media (min-width: 701px) {
+      html,
       body {
-        justify-content: flex-start;
+        overflow: auto;
+        touch-action: auto;
+      }
+
+      body {
+        min-height: 100vh;
+        height: auto;
       }
 
       .stage {
-        padding-top: 10px;
+        min-height: 100vh;
+        height: auto;
+        overflow: visible;
       }
 
-      .toolbar {
-        margin-top: 12px;
+      #bookShell {
+        width: min(1180px, 96vw);
+        height: min(78vh, 760px);
+        overflow: visible;
       }
 
-      .hint {
-        max-width: 460px;
+      #book {
+        touch-action: auto;
       }
     }
   </style>
@@ -143,21 +267,31 @@
 
 <body>
   <main class="stage">
-    <div id="book">
-      <div class="page" data-density="soft">
-        <div class="page-content"><img src="page1.jpg" alt="Trang 1"></div>
-      </div>
+    <div id="bookShell">
+      <div id="book">
+        <div class="page" data-density="soft">
+          <div class="page-content">
+            <img src="page1.jpg" alt="Trang 1">
+          </div>
+        </div>
 
-      <div class="page" data-density="soft">
-        <div class="page-content"><img src="page2.jpg" alt="Trang 2"></div>
-      </div>
+        <div class="page" data-density="soft">
+          <div class="page-content">
+            <img src="page2.jpg" alt="Trang 2">
+          </div>
+        </div>
 
-      <div class="page" data-density="soft">
-        <div class="page-content"><img src="page3.jpg" alt="Trang 3"></div>
-      </div>
+        <div class="page" data-density="soft">
+          <div class="page-content">
+            <img src="page3.jpg" alt="Trang 3">
+          </div>
+        </div>
 
-      <div class="page" data-density="soft">
-        <div class="page-content"><img src="page4.jpg" alt="Trang 4"></div>
+        <div class="page" data-density="soft">
+          <div class="page-content">
+            <img src="page4.jpg" alt="Trang 4">
+          </div>
+        </div>
       </div>
     </div>
 
@@ -176,84 +310,130 @@
       ("ontouchstart" in window);
 
     const bookEl = document.getElementById("book");
+    const shellEl = document.getElementById("bookShell");
+    const pages = document.querySelectorAll(".page");
 
+    /*
+      autoSize = false:
+      Đây là thay đổi chính để tránh PageFlip tự thay đổi kích thước container
+      trong lúc chuyển trang trên mobile.
+    */
     const pageFlip = new St.PageFlip(bookEl, {
       width: 450,
       height: 600,
 
       size: "stretch",
-      minWidth: 280,
+
+      minWidth: 260,
       maxWidth: 540,
-      minHeight: 373,
+      minHeight: 347,
       maxHeight: 720,
+
+      autoSize: false,
 
       showCover: false,
       usePortrait: true,
-      autoSize: true,
 
       drawShadow: true,
-      maxShadowOpacity: 0.78,
-      flippingTime: 950,
+      maxShadowOpacity: 0.72,
+
+      flippingTime: 900,
 
       /*
-       * Desktop:
-       *   StPageFlip tự xử lý kéo góc trang.
-       *
-       * Mobile:
-       *   Tắt touch-native của thư viện và tự xử lý swipe ở dưới.
-       *   Mục đích là prev/next luôn chạy cùng kiểu animation.
-       */
+        Mobile không để engine nhận gesture trực tiếp.
+        Tự bắt touch ở wrapper để ngăn rung/scroll/bounce.
+      */
       useMouseEvents: !isMobile,
 
-      mobileScrollSupport: true,
-      clickEventForward: true,
+      mobileScrollSupport: false,
 
-      swipeDistance: 20,
-      showPageCorners: true,
-      disableFlipByClick: false
+      clickEventForward: false,
+
+      showPageCorners: !isMobile,
+      disableFlipByClick: isMobile
     });
 
-    const pages = document.querySelectorAll(".page");
     pageFlip.loadFromHTML(pages);
 
     const pageInfo = document.getElementById("pageInfo");
     const hint = document.getElementById("hint");
 
     let currentPage = 0;
-    let animating = false;
+    let locked = false;
+    let prevMirrorActive = false;
 
     function updatePageInfo(index) {
       currentPage = index;
       pageInfo.textContent = `Trang ${index + 1} / ${pages.length}`;
     }
 
-    pageFlip.on("flip", (e) => {
-      updatePageInfo(e.data);
+    /*
+      Tắt mirror sau khi animation thực sự kết thúc.
+    */
+    pageFlip.on("changeState", (e) => {
+      if (e.data === "read") {
+        locked = false;
 
-      // khóa rất ngắn để tránh double-swipe trên điện thoại
-      animating = true;
-      window.setTimeout(() => {
-        animating = false;
-      }, 250);
+        if (prevMirrorActive) {
+          requestAnimationFrame(() => {
+            bookEl.classList.remove("mirror-prev");
+            prevMirrorActive = false;
+          });
+        }
+      }
     });
 
-    /*
-     * QUAN TRỌNG:
-     * cả lật tới và lật lui đều dùng BOTTOM.
-     * Nhờ vậy hình dạng animation thống nhất hơn.
-     */
+    pageFlip.on("flip", (e) => {
+      updatePageInfo(e.data);
+    });
+
     function nextPage() {
-      if (animating) return;
+      if (locked) return;
+      if (currentPage >= pages.length - 1) return;
+
+      locked = true;
+
+      bookEl.classList.remove("mirror-prev");
+      prevMirrorActive = false;
+
+      /*
+        Luôn cùng một corner.
+      */
       pageFlip.flipNext("bottom");
     }
 
     function prevPage() {
-      if (animating) return;
-      pageFlip.flipPrev("bottom");
+      if (locked) return;
+      if (currentPage <= 0) return;
+
+      locked = true;
+
+      /*
+        Mirror toàn engine trong lúc BACK animation.
+        Nội dung bên trong được mirror ngược lại bởi CSS.
+        Kết quả: geometry của backward nhìn đối xứng forward.
+      */
+      prevMirrorActive = true;
+      bookEl.classList.add("mirror-prev");
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          pageFlip.flipPrev("bottom");
+        });
+      });
     }
 
-    document.getElementById("prevBtn").addEventListener("click", prevPage);
-    document.getElementById("nextBtn").addEventListener("click", nextPage);
+    document.getElementById("prevBtn").addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      prevPage();
+    });
+
+    document.getElementById("nextBtn").addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      nextPage();
+    });
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "ArrowLeft") prevPage();
@@ -261,51 +441,93 @@
     });
 
     /*
-     * Mobile swipe riêng:
-     * - vuốt sang trái  -> trang sau
-     * - vuốt sang phải -> trang trước
-     * - tap nửa phải   -> trang sau
-     * - tap nửa trái   -> trang trước
-     */
+      MOBILE GESTURE HANDLER
+
+      preventDefault() được dùng ở vùng book để:
+      - không scroll trang
+      - không overscroll/bounce
+      - không double-tap zoom
+      - không phát sinh click góc của PageFlip
+      => giảm rung/giật rõ rệt.
+    */
     if (isMobile) {
       let startX = 0;
       let startY = 0;
       let startTime = 0;
+      let tracking = false;
 
-      bookEl.addEventListener("touchstart", (e) => {
+      shellEl.addEventListener("touchstart", (e) => {
         if (!e.touches || e.touches.length !== 1) return;
 
+        e.preventDefault();
+
         const t = e.touches[0];
+
         startX = t.clientX;
         startY = t.clientY;
-        startTime = Date.now();
-      }, { passive: true });
+        startTime = performance.now();
 
-      bookEl.addEventListener("touchend", (e) => {
+        tracking = true;
+      }, { passive: false });
+
+      shellEl.addEventListener("touchmove", (e) => {
+        if (!tracking) return;
+
+        /*
+          Chặn toàn bộ pan/bounce trong vùng sách.
+        */
+        e.preventDefault();
+      }, { passive: false });
+
+      shellEl.addEventListener("touchend", (e) => {
+        if (!tracking) return;
+
+        e.preventDefault();
+
+        tracking = false;
+
         if (!e.changedTouches || e.changedTouches.length !== 1) return;
 
         const t = e.changedTouches[0];
 
         const dx = t.clientX - startX;
         const dy = t.clientY - startY;
-        const elapsed = Date.now() - startTime;
+
+        const elapsed = performance.now() - startTime;
 
         const absX = Math.abs(dx);
         const absY = Math.abs(dy);
 
-        // Swipe ngang rõ ràng
-        if (absX >= 38 && absX > absY * 1.15 && elapsed < 900) {
+        /*
+          Swipe ngang.
+        */
+        if (
+          absX >= 34 &&
+          absX > absY * 1.20 &&
+          elapsed <= 1000
+        ) {
           if (dx < 0) {
             nextPage();
           } else {
             prevPage();
           }
+
           return;
         }
 
-        // Tap nhanh: nửa trái / nửa phải
-        if (absX < 14 && absY < 14 && elapsed < 350) {
-          const rect = bookEl.getBoundingClientRect();
+        /*
+          Tap:
+          nửa trái = prev
+          nửa phải = next
+
+          Không gọi click() nên tránh event click kép/rung.
+        */
+        if (
+          absX <= 12 &&
+          absY <= 12 &&
+          elapsed <= 320
+        ) {
+          const rect = shellEl.getBoundingClientRect();
           const localX = t.clientX - rect.left;
 
           if (localX < rect.width / 2) {
@@ -314,9 +536,39 @@
             nextPage();
           }
         }
-      }, { passive: true });
+      }, { passive: false });
 
+      shellEl.addEventListener("touchcancel", (e) => {
+        e.preventDefault();
+        tracking = false;
+      }, { passive: false });
+
+      /*
+        Chặn context menu / long press trên mobile.
+      */
+      shellEl.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+      });
+
+      hint.innerHTML =
+        "<strong>Mobile:</strong> vuốt trái/phải hoặc chạm nửa trái/phải. " +
+        "Đã khóa scroll/bounce trong vùng sách để tránh rung màn hình.";
+    } else {
+      hint.innerHTML =
+        "<strong>Desktop:</strong> kéo góc trang bằng chuột hoặc dùng các nút bên dưới.";
     }
+
+    /*
+      Tránh resize liên tục khi thanh địa chỉ mobile co/giãn.
+      Chỉ update khi orientation thay đổi.
+    */
+    window.addEventListener("orientationchange", () => {
+      window.setTimeout(() => {
+        try {
+          pageFlip.update();
+        } catch (_) {}
+      }, 250);
+    });
 
     updatePageInfo(0);
   </script>
